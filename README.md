@@ -1,47 +1,46 @@
-# Debate Crew — Multi-Agent AI Debate
+# Financial Researcher — Multi-Agent AI Company Analysis
 
-A multi-agent debate application built with **CrewAI**. It takes a motion, generates arguments for and against it, and then asks a separate judge agent to evaluate both sides and decide which argument is more convincing.
+A multi-agent financial research application built with **CrewAI**. It researches a company using web search, analyzes the findings, and generates a structured report covering company performance, recent developments, challenges, opportunities, and future outlook.
 
-The current example debates the motion:
-
-> There needs to be strict laws to regulate LLMs.
+The current implementation researches **NVIDIA** by default.
 
 ## How It Works
 
-The crew executes three tasks sequentially:
+The crew uses two specialized agents that execute sequentially:
 
-1. **Propose:** The debater agent creates an argument supporting the motion.
-2. **Oppose:** The debater agent creates an argument opposing the motion.
-3. **Decide:** The judge evaluates both arguments, selects the more convincing side, and explains its decision.
+1. **Financial Researcher:** Uses web search to gather up-to-date information about the company, including its current position, historical performance, challenges, opportunities, recent news, and future outlook.
+2. **Market Analyst:** Analyzes the research findings, identifies trends, and produces a professional report with an executive summary, analysis, and market outlook.
+
+The analyst receives the research task's output as context, allowing it to build on the research instead of starting from scratch.
 
 ```mermaid
 flowchart TD
-    A[Debate Motion] --> B[Propose Argument]
-    B --> C[Oppose Argument]
-    C --> D[Judge Evaluates Both Sides]
-    D --> E[Final Decision and Reasoning]
+    A[Company and Current Date] --> B[Financial Researcher]
+    B --> C[Serper Web Search]
+    C --> D[Research Findings]
+    D --> E[Market Analyst]
+    E --> F[Analysis and Insights]
+    F --> G[output/report.md]
 ```
-
-## Agents and Models
-
-| Agent | Responsibility | Model |
-|---|---|---|
-| Debater | Creates arguments for and against the motion | `deepseek-v4-flash` |
-| Judge | Evaluates the arguments and chooses the stronger position | `gemini-3.5-flash-lite` |
-
-Both models are configured through the MixRoute API endpoint in `src/debate/crew.py`.
-
-The crew uses CrewAI's sequential process, so each task runs in the order defined in `src/debate/config/tasks.yaml`.
-
-**Note:** The same debater agent is reused for the proposing and opposing tasks. They are separate tasks, not separate debater agents.
 
 ## Tech Stack
 
 - **Python:** `>=3.10,<3.14`
 - **CrewAI:** `1.14.4`
-- **uv:** Python package and environment management
+- **uv:** Dependency and environment management
 - **MixRoute:** LLM API access
+- **SerperDevTool:** Web search for company research
 - **YAML:** Agent and task configuration
+- **Markdown:** Final report format
+
+## Agents and Models
+
+| Agent | Responsibility | Tools |
+|---|---|---|
+| Researcher | Collects company information and current developments | Serper web search |
+| Analyst | Interprets research and writes the final report | No additional tools configured |
+
+Both agents use the `gemini-3.5-flash-lite` model through the MixRoute API endpoint configured in `src/financial_researcher/crew.py`.
 
 ## Getting Started
 
@@ -49,16 +48,22 @@ The crew uses CrewAI's sequential process, so each task runs in the order define
 
 Install Python 3.10–3.13 and [uv](https://docs.astral.sh/uv/).
 
+You will also need:
+- A MixRoute API key for LLM access.
+- A Serper API key for web search.
+
 ### 1. Clone the repository
 
 ```bash
 git clone <your-repository-url>
-cd crewai-debate
+cd crewai-financial-researcher
 ```
 
-Replace the repository URL and directory name with your actual GitHub repository details.
+Replace the repository URL and directory name with your actual GitHub details.
 
 ### 2. Install dependencies
+
+Run this command from the project root:
 
 ```bash
 uv sync
@@ -70,50 +75,55 @@ Create a `.env` file in the project root:
 
 ```env
 MIXROUTE_API_KEY=your_mixroute_api_key
+SERPER_API_KEY=your_serper_api_key
 ```
 
-Replace the placeholder with your MixRoute API key. Keep this key private and never commit your `.env` file to GitHub.
+Replace the placeholders with your actual API keys. Keep `.env` private and make sure it is excluded from Git commits.
 
-### 4. Run the debate
+### 4. Run the project
 
 ```bash
 uv run run_crew
 ```
 
-The application starts from `src/debate/main.py` and prints the final result to the terminal.
+The application starts from `src/financial_researcher/main.py`, runs the crew, and saves the final report to `output/report.md`.
 
-## Example Debate Motion
+## Choose a Company to Research
 
-The current motion is defined in `src/debate/main.py`:
-
-```python
-inputs = {
-    "motion": "There needs to be strict laws to regulate LLMs"
-}
-```
-
-To debate another topic, replace the value of `motion` with your preferred statement.
-
-For example:
+The company and current date are currently defined in `src/financial_researcher/main.py`:
 
 ```python
 inputs = {
-    "motion": "Artificial intelligence will create more jobs than it eliminates"
+    "company": "Nvidia",
+    "current_date": datetime.now().strftime("%Y-%m-%d"),
 }
 ```
 
-Run the application again to generate arguments for and against the new motion.
+Change the `company` value to research another company:
 
-## Output Files
+```python
+inputs = {
+    "company": "Apple",
+    "current_date": datetime.now().strftime("%Y-%m-%d"),
+}
+```
 
-The crew saves the results of its tasks to Markdown files:
+You can use companies such as NVIDIA, Apple, Microsoft, or Tesla. The quality and availability of results depend on the information accessible through web search and the LLM's ability to analyze it.
 
-| File | Description |
-|---|---|
-| `output/propose.md` | Argument supporting the motion |
-| `output/oppose.md` | Argument opposing the motion |
-| `output/decide.md` | Judge's decision and explanation |
+## Report Contents
 
-The final crew result is also printed through `result.raw`.
+The research task is configured to cover:
 
+- Current company status and financial health
+- Historical company performance
+- Major challenges and opportunities
+- Recent news and events
+- Future outlook and potential developments
 
+The analysis task then organizes the findings into a professional report with an executive summary, key information, trend analysis, market outlook, and conclusion.
+
+The report is written to:
+
+```text
+output/report.md
+```
